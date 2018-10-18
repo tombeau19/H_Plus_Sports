@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 using H_Plus_Sports.Models;
 using Microsoft.AspNetCore.Mvc;
@@ -23,7 +24,13 @@ namespace H_Plus_Sports.Controllers
         [HttpGet]
         public IActionResult GetCustomer()
         {
-            return new ObjectResult(_context.Customer);
+            var results = new ObjectResult(_context.Customer)
+            {
+                StatusCode = (int)HttpStatusCode.OK
+            };
+
+            Request.HttpContext.Response.Headers.Add("X-Total-Count", _context.Customer.Count().ToString());
+            return results;
         }
 
         [HttpGet("{id}", Name = "GetCustomer")]
