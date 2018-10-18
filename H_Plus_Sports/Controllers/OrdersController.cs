@@ -1,9 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using H_Plus_Sports.Models;
 
 namespace HPlusSportsAPI.Controllers
 {
@@ -11,39 +10,49 @@ namespace HPlusSportsAPI.Controllers
     [Route("api/Orders")]
     public class OrdersController : Controller
     {
-        public OrdersController()
-        {
+        private readonly H_Plus_SportsContext _context;
 
+        public OrdersController(H_Plus_SportsContext context)
+        {
+            _context = context;
         }
 
         [HttpGet]
         public IActionResult GetOrder()
         {
-            return Ok();
+            return new ObjectResult(_context.Order);
         }
 
-        [HttpGet("{id}")]
-        public IActionResult GetOrder([FromRoute] int id)
+        [HttpGet("{id}", Name = "GetOrder")]
+        public async Task<IActionResult> GetOrder([FromRoute] int id)
         {
-            return Ok();
-        }
-
-        [HttpPost]
-        public IActionResult PostOrder([FromBody] Object obj)
-        {
-            return Ok();
+            var order = await _context.Order.SingleOrDefaultAsync(m => m.OrderId == id);
+            return Ok(order);
         }
 
         [HttpPut("{id}")]
-        public IActionResult PutOrder([FromRoute] int id, [FromBody] Object obj)
+        public async Task<IActionResult> PutOrder([FromRoute] int id, [FromBody] Order order)
         {
-            return Ok();
+            _context.Entry(order).State = EntityState.Modified;
+            await _context.SaveChangesAsync();
+            return Ok(order);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> PostOrder([FromBody] Order order)
+        {
+            _context.Order.Add(order);
+            await _context.SaveChangesAsync();
+            return CreatedAtAction("GetOrder", new { id = order.OrderId }, order);
         }
 
         [HttpDelete("{id}")]
-        public IActionResult DeleteOrder([FromRoute] int id)
+        public async Task<IActionResult> DeleteOrder([FromRoute] int id)
         {
-            return Ok();
+            var order = await _context.Order.SingleOrDefaultAsync(m => m.OrderId == id);
+            _context.Order.Remove(order);
+            await _context.SaveChangesAsync();
+            return Ok(order);
         }
     }
 }

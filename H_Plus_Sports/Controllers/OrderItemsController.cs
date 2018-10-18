@@ -1,9 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using H_Plus_Sports.Models;
 
 namespace HPlusSportsAPI.Controllers
 {
@@ -11,39 +10,49 @@ namespace HPlusSportsAPI.Controllers
     [Route("api/OrderItems")]
     public class OrderItemsController : Controller
     {
-        public OrderItemsController()
-        {
+        private readonly H_Plus_SportsContext _context;
 
+        public OrderItemsController(H_Plus_SportsContext context)
+        {
+            _context = context;
         }
 
         [HttpGet]
         public IActionResult GetOrderItem()
         {
-            return Ok();
+            return new ObjectResult(_context.OrderItem);
         }
 
-        [HttpGet("{id}")]
-        public IActionResult GetOrderItem([FromRoute] int id)
+        [HttpGet("{id}", Name = "GetOrderItem")]
+        public async Task<IActionResult> GetOrderItem([FromRoute] int id)
         {
-            return Ok();
-        }
-
-        [HttpPost]
-        public IActionResult PostOrderItem([FromBody] Object obj)
-        {
-            return Ok();
+            var orderItem = await _context.OrderItem.SingleOrDefaultAsync(m => m.OrderItemId == id);
+            return Ok(orderItem);
         }
 
         [HttpPut("{id}")]
-        public IActionResult PutOrderItem([FromRoute] int id, [FromBody] Object obj)
+        public async Task<IActionResult> PutOrderItem([FromRoute] int id, [FromBody] OrderItem orderItem)
         {
-            return Ok();
+            _context.Entry(orderItem).State = EntityState.Modified;
+            await _context.SaveChangesAsync();
+            return Ok(orderItem);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> PostOrderItem([FromBody] OrderItem orderItem)
+        {
+            _context.OrderItem.Add(orderItem);
+            await _context.SaveChangesAsync();
+            return CreatedAtAction("GetOrderItem", new { id = orderItem.OrderItemId }, orderItem);
         }
 
         [HttpDelete("{id}")]
-        public IActionResult DeleteOrderItem([FromRoute] int id)
+        public async Task<IActionResult> DeleteOrderItem([FromRoute] int id)
         {
-            return Ok();
+            var orderItem = await _context.OrderItem.SingleOrDefaultAsync(m => m.OrderItemId == id);
+            _context.OrderItem.Remove(orderItem);
+            await _context.SaveChangesAsync();
+            return Ok(orderItem);
         }
     }
 }
